@@ -1,7 +1,7 @@
 /* Name: Kevin Singh
    Course: CNT 4714 Fall 2022 
    Assignment title: Project 2 – Multi-threaded programming in Java 
-   Date:  October 2, 2022 
+   Date:  October 9, 2022 
    Class: PackageManagementFacilitySimulator.java
 */ 
 

@@ -1,7 +1,7 @@
 /* Name: Kevin Singh
    Course: CNT 4714 Fall 2022 
    Assignment title: Project 2 – Multi-threaded programming in Java 
-   Date:  October 2, 2022 
+   Date:  October 9, 2022 
    Class: PackageManagementFacilitySimulator.java
 */ 
 
@@ -18,7 +18,6 @@ public class RoutingStation implements Runnable {
 	protected Conveyor input;
 	protected Conveyor output;
 	protected Random rand = new Random();
-    private boolean locksAcquired = false;
 
 	public RoutingStation(int stationNumber, int workload, Conveyor input, Conveyor output) {
 		this.stationNumber = stationNumber;
@@ -85,38 +84,36 @@ public class RoutingStation implements Runnable {
 		// run the simulation on the station for its entire workload
 		for(int i = 0; i < workload; i++) {
             System.out.println("	Routing Station " + stationNumber + ": Entering Lock Acquisition Phase.");
-            System.out.println("	Routing Station " + stationNumber + ": Holds lock on input conveyor C" + input.conveyorNumber + ".");
-            locksAcquired = false;
 			// loop for the workload of this station
 			// get input lock
 			// attempt to get output lock
 			// if both locks acquired - then go to work
-            while(locksAcquired == false) {
-            	if(input.lockConveyors() == true && output.lockConveyors() == true) { // The locks are free and access is granted
-            		locksAcquired = true; // end the loop
-            		System.out.println("	Routing Station " + stationNumber + ": Holds lock on output conveyor C" + output.conveyorNumber + ".");
-                    System.out.println("\n * * * * * * Routing Station " + stationNumber +": holds locks on both input conveyor C" + input.conveyorNumber + " and on output conveyor C" + output.conveyorNumber + ". * * * * * *  \n");
-                    doWork();
-                    System.out.println("	Routing Station " + stationNumber + ": Entering Lock Release Phase.");
-                    input.unlockConveyor();
-                    System.out.println("	Routing Station " + stationNumber + ": Unlocks/releases input conveyor C" + input.conveyorNumber);
-                    output.unlockConveyor();
-                    System.out.println("	Routing Station " + stationNumber + ": Unlocks/releases output conveyor C" + output.conveyorNumber);
+            while(workloadCounter > 0) {
+            	if(input.lockConveyors() == true) { // The locks are free and access is granted
+                    System.out.println("	Routing Station " + stationNumber + ": Holds lock on input conveyor C" + input.conveyorNumber + ".");
+                    if(output.lockConveyors() == true) {
+	                    System.out.println("	Routing Station " + stationNumber + ": Holds lock on output conveyor C" + output.conveyorNumber + ".");
+	                    System.out.println("\n * * * * * * Routing Station " + stationNumber +": holds locks on both input conveyor C" + input.conveyorNumber + " and on output conveyor C" + output.conveyorNumber + ". * * * * * *  \n");
+	                    doWork();
+	                    System.out.println("	Routing Station " + stationNumber + ": Entering Lock Release Phase.");
+	                    input.unlockConveyor();
+	                    System.out.println("	Routing Station " + stationNumber + ": Unlocks/releases input conveyor C" + input.conveyorNumber);
+	                    output.unlockConveyor();
+	                    System.out.println("	Routing Station " + stationNumber + ": Unlocks/releases output conveyor C" + output.conveyorNumber);
+                    }
+                    else {
+                        System.out.println("	Routing Station " + stationNumber + ": Unable to lock output conveyor C" + output.conveyorNumber + ". SYNCHRONIZATION ISSUE: releasing lock on input conveyor C" + input.conveyorNumber);
+                  		// unlock conveyors
+                  		input.unlockConveyor(); // unlock the input conveyor
+                  		goToSleep(); // sleep
+                    }
             	}
-            	else if(input.lockConveyors() == false || output.lockConveyors() == false) { // output lock is busy with another station
-                    locksAcquired = true; // end the loop
-            		System.out.println("	Routing Station " + stationNumber + ": Unable to lock output conveyor C" + output.conveyorNumber + ". SYNCHRONIZATION ISSUE: releasing lock on input conveyor C" + input.conveyorNumber);
-            		
-            		// unlock conveyors
-            		input.unlockConveyor(); // unlock the input conveyor
-            		output.unlockConveyor(); // unlock the output conveyor
-            		goToSleep(); // sleep
+            	else {
+            		goToSleep(); // input conveyor must be locked, go to sleep
             	}
             }
 		}
 		// loops ends - station is done - print out message
 		System.out.println("\n\n @ @ @ @ @ @ @ ROUTING STATION " + stationNumber + ": OFF LINE @ @ @ @ @ @ @ \n\n");
-        input.unlockConveyor();
-        output.unlockConveyor();
 	}
 }
